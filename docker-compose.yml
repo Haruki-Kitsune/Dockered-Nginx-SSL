@@ -1,0 +1,13 @@
+# The version of docker compose file
+version: '3'
+
+services:
+  dev_app: # Can be renamed
+    container_name: dev_app # Can be renamed
+    build: . # Creates a Docker image from the Dockerfile in the same directory as this file
+    command: sh -c "Command to start the service."
+    ports:
+      - # port you want to use for the service. (Keep the ports of the service and these ports the same.)
+      - # More then one port can be opened here
+    environment:
+      - # These variables will be passed to .env in the container
