@@ -1,0 +1,50 @@
+# The version of docker compose file
+version: '3'
+
+services:
+  prod_app: # Can be renamed
+    container_name: prod_app # Can be renamed
+    build: . # Creates a Docker image from the Dockerfile in the same directory as this file
+    command: sh -c "Command to start the service."
+    expose:
+      - # Does the same as ports in docker-compose.yml, but these posts can only be accessed be other Docker containers
+      - # Here you can also use multiple ports
+    environment:
+      - # These variables will be passed to .env in the container
+    restart: 'on-failure' # Done so that you do not have to restart the service manually
+    
+  proxy:
+    container_name: proxy
+    build:
+      context: ./docker/proxy # Creates a Docker image from the Dockerfile in the directory given here
+    ports:
+      - 80:80 # HTTP port
+      - 443:443 # HTTPS port
+    volumes: # Volumes contain data that needs to be stored even if the service is shutdown or restarted
+      - certbot-web:/vol/www
+      - proxy-dhparams:/vol/proxy
+      - certbot-certs:/etc/letsencrypt
+    environment:
+      - DOMAIN=${DOMAIN} # The domain name of the web service, this is read out of another .env file
+    depends_on: # This causes the service to start only after the depended service has started
+      - prod_app # This is the service behind the Nginx
+    restart: 'on-failure'
+    
+  certbot:
+    container_name: certbot
+    build:
+      context: ./docker/certbot # Creates a Docker image from the Dockerfile in the directory given here
+    command: echo "Skipping..." # We do not want to start this service unless the certificates need to be renewed
+    environment:
+      - EMAIL=${ACME_DEFAULT_EMAIL} # The email used as accaunt for letsencrypt
+      - DOMAIN=${DOMAIN} # The domain name of the web service, this is read out of another .env file
+    volumes: # Volumes contain data that needs to be stored even if the service is shutdown or restarted
+      - certbot-web:/vol/www
+      - certbot-certs:/etc/letsencrypt/
+    depends_on: # This causes the service to start only after the depended service has started
+      - proxy # This is the proxy service
+
+volumes: # This creates named volumes that can be used by multiple Docker services
+  certbot-web:
+  proxy-dhparams:
+  certbot-certs:
