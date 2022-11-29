@@ -1,6 +1,6 @@
 upstream prodapp {
     # This is the container that we want to access.
-    server prod_app:port_number;
+    server ${APP_HOST}:${APP_PORT};
 }
 
 server {
